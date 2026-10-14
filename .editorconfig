@@ -1,0 +1,10 @@
+root = true
+
+[*.cs]
+# Rider / ReSharper: which members must be qualified with this.
+resharper_csharp_instance_members_qualify_members = all
+resharper_csharp_instance_members_qualify_declared_in = this_class, base_class
+
+# Make missing "this." show up as a warning (or error)
+resharper_arrange_this_qualifier_highlighting = warning
+
