@@ -1,6 +1,4 @@
-using System;
 using UnityEngine;
-using UnityPipeline.Microsoft.CodeAnalysis;
 using WorldGeneration;
 
 namespace Chunks
@@ -8,27 +6,27 @@ namespace Chunks
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
     public class Chunk : MonoBehaviour
     {
+        private ChunkGrid _chunkGrid;
         private MeshGenerator _meshGenerator;
         public void Initialize(Vector3 coords, MeshGenerator generator)
         {
             this._meshGenerator = generator;
             this.transform.position = coords;
 
-            var mesh = this.CreateMesh(coords, generator);
+            Mesh mesh = this.CreateMesh(coords, generator);
             this.GetComponent<MeshFilter>().mesh = mesh;
         }
 
         private Mesh CreateMesh(Vector3 coords, MeshGenerator generator)
         {
         
-            var meshData = generator.GenerateMeshData(coords);
-        
-            Mesh newMesh = new Mesh
-            {
-                vertices = meshData.Vertices,
-                triangles = meshData.Triangles,
-                normals = meshData.Normals
-            };
+            ChunkMeshData meshData = generator.GenerateMeshData(coords);
+
+            Mesh newMesh = new Mesh();
+            newMesh.SetVertices(meshData.Vertices);
+            newMesh.SetTriangles(meshData.Triangles, 0);
+            newMesh.SetNormals(meshData.Normals);
+            
             return newMesh;
         }
 

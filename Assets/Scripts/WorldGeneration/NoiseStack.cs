@@ -6,7 +6,7 @@ namespace WorldGeneration
     public class NoiseStack
     {
         private readonly float _seed = Time.time;
-        private readonly float _scale = 10.0f;
+        private readonly float _scale = 5.0f;
 
         public float SampleAt(Vector3 position)
         {
@@ -14,7 +14,7 @@ namespace WorldGeneration
             position += new Vector3(this._seed, this._seed, this._seed);
             
             float3 samplePosition = new float3(position.x, position.y, position.z);
-            return noise.snoise(samplePosition);
+            return (noise.snoise(samplePosition) + 1) / 2 ;
         }    
     }
 }

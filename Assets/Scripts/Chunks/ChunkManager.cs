@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ScriptableObjects;
 using UnityEngine;
 using WorldGeneration;
 
@@ -13,7 +14,7 @@ namespace Chunks
     
         void Awake()
         {
-            this._meshGenerator = new MeshGenerator();
+            this._meshGenerator = new MeshGenerator(this.noiseSettings.Grid);
         }
 
         void OnEnable()
@@ -26,7 +27,7 @@ namespace Chunks
         private Chunk CreateChunk(Vector3 position)
         {
             var go = new GameObject($"Chunk {position}");
-            go.transform.parent = transform;
+            go.transform.parent = this.transform;
             go.transform.localPosition = position;
 
             var chunk = go.AddComponent<Chunk>();
