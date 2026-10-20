@@ -7,7 +7,8 @@ namespace Chunks
 {
     public class ChunkManager : MonoBehaviour
     {
-        [SerializeField] private NoiseSettings noiseSettings;
+        [SerializeField] NoiseSettings noiseSettings;
+        [SerializeField] private Material material;
 
         private readonly HashSet<Chunk> _chunks = new ();
         private MeshGenerator _meshGenerator;
@@ -31,7 +32,7 @@ namespace Chunks
             go.transform.localPosition = position;
 
             var chunk = go.AddComponent<Chunk>();
-            chunk.Initialize(position, this._meshGenerator);
+            chunk.Initialize(position, this._meshGenerator, this.material);
             
             return chunk;
         }

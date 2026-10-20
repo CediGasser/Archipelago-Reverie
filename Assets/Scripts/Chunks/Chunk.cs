@@ -8,18 +8,19 @@ namespace Chunks
     {
         private ChunkGrid _chunkGrid;
         private MeshGenerator _meshGenerator;
-        public void Initialize(Vector3 coords, MeshGenerator generator)
+        public void Initialize(Vector3 coords, MeshGenerator generator, Material material)
         {
             this._meshGenerator = generator;
             this.transform.position = coords;
 
             Mesh mesh = this.CreateMesh(coords, generator);
             this.GetComponent<MeshFilter>().mesh = mesh;
+            
+            this.GetComponent<MeshRenderer>().material = material;
         }
 
         private Mesh CreateMesh(Vector3 coords, MeshGenerator generator)
         {
-        
             ChunkMeshData meshData = generator.GenerateMeshData(coords);
 
             Mesh newMesh = new Mesh();
