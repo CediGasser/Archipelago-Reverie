@@ -1,20 +1,22 @@
 using Unity.Mathematics;
-using UnityEngine;
 
 namespace WorldGeneration
 {
     public class NoiseStack
     {
-        private readonly float _seed = Time.time;
-        private readonly float _scale = 5.0f;
+        private readonly float3 _offset;
+        private readonly float _scale;
 
-        public float SampleAt(Vector3 position)
+        public NoiseStack(float scale, int seed)
+        { 
+            this._scale = scale;
+            // Kept moderate so snoise doesn't lose float precision far from the origin
+            this._offset = Random.CreateFromIndex((uint)seed).NextFloat3(-1000f, 1000f);
+        }
+
+        public float SampleAt(float3 worldPos)
         {
-            position /= this._scale;
-            position += new Vector3(this._seed, this._seed, this._seed);
-            
-            float3 samplePosition = new float3(position.x, position.y, position.z);
-            return (noise.snoise(samplePosition) + 1) / 2 ;
-        }    
+            return (noise.snoise(worldPos / this._scale + this._offset) + 1) / 2;
+        }
     }
 }

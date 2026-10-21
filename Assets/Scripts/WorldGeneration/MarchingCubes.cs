@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Data;
 using Chunks;
 using Unity.Mathematics;
 
@@ -11,13 +10,13 @@ namespace WorldGeneration
         {
             List<Triangle> triangles = new List<Triangle>();
 
-            foreach (var cell in chunkGrid.Cells())
+            foreach (var cellCoord in chunkGrid.Cells())
             {
-                // The 8 corners
-                var x = cell.x;
-                var y = cell.y;
-                var z = cell.z;
-                int3[] corners =
+                // Grid coordinates of all 8 corners
+                var x = cellCoord.x;
+                var y = cellCoord.y;
+                var z = cellCoord.z;
+                int3[] cornerCoords =
                 {
                     new (x, y, z),
                     new (x, y, z + 1),
@@ -32,35 +31,35 @@ namespace WorldGeneration
                 // Density values at all 8 corners of a cube
                 float[] cornerValues =
                 {
-                    densityField[chunkGrid.Index(corners[0])],
-                    densityField[chunkGrid.Index(corners[1])],
-                    densityField[chunkGrid.Index(corners[2])],
-                    densityField[chunkGrid.Index(corners[3])],
-                    densityField[chunkGrid.Index(corners[4])],
-                    densityField[chunkGrid.Index(corners[5])],
-                    densityField[chunkGrid.Index(corners[6])],
-                    densityField[chunkGrid.Index(corners[7])]
+                    densityField[chunkGrid.PointIndex(cornerCoords[0])],
+                    densityField[chunkGrid.PointIndex(cornerCoords[1])],
+                    densityField[chunkGrid.PointIndex(cornerCoords[2])],
+                    densityField[chunkGrid.PointIndex(cornerCoords[3])],
+                    densityField[chunkGrid.PointIndex(cornerCoords[4])],
+                    densityField[chunkGrid.PointIndex(cornerCoords[5])],
+                    densityField[chunkGrid.PointIndex(cornerCoords[6])],
+                    densityField[chunkGrid.PointIndex(cornerCoords[7])]
                 };
                 
-                // Coordinates at all 8 corners
-                float3[] cornerCoordinates =
+                // Local positions of all 8 corners
+                float3[] cornerPositions =
                 {
-                    chunkGrid.ToLocal(corners[0]),
-                    chunkGrid.ToLocal(corners[1]),
-                    chunkGrid.ToLocal(corners[2]),
-                    chunkGrid.ToLocal(corners[3]),
-                    chunkGrid.ToLocal(corners[4]),
-                    chunkGrid.ToLocal(corners[5]),
-                    chunkGrid.ToLocal(corners[6]),
-                    chunkGrid.ToLocal(corners[7]),
+                    chunkGrid.PointToLocal(cornerCoords[0]),
+                    chunkGrid.PointToLocal(cornerCoords[1]),
+                    chunkGrid.PointToLocal(cornerCoords[2]),
+                    chunkGrid.PointToLocal(cornerCoords[3]),
+                    chunkGrid.PointToLocal(cornerCoords[4]),
+                    chunkGrid.PointToLocal(cornerCoords[5]),
+                    chunkGrid.PointToLocal(cornerCoords[6]),
+                    chunkGrid.PointToLocal(cornerCoords[7]),
                 };
                         
-                this.Polygonise(cornerValues, cornerCoordinates, isoLevel, ref triangles);
+                this.Polygonise(cornerValues, cornerPositions, isoLevel, triangles);
             }
             return triangles;
         }
 
-        private void Polygonise(float[] cornerValues, float3[] cornerCoordinates, float isoLevel, ref List<Triangle> triangles)
+        private void Polygonise(float[] cornerValues, float3[] cornerPositions, float isoLevel, List<Triangle> triangles)
         {
             byte cubeIndex = 0;
             if (cornerValues[0] < isoLevel) cubeIndex |= 1;
@@ -77,24 +76,26 @@ namespace WorldGeneration
             
             for (var i = 0; MarchingCubesTables.TriangleTable[cubeIndex, i] != -1; i += 3)
             {
+                // Edges i, i+1, i+2 are assigned to A, C, B on purpose: the table's triangles are wound
+                // opposite to Unity's clockwise front faces, so swapping B and C flips them to face outward.
                 var triangle = new Triangle()
                 {
                     VertexA = this.VertexInterpolate(
                         isoLevel, 
-                        cornerCoordinates[MarchingCubesTables.EdgeCornerTable[MarchingCubesTables.TriangleTable[cubeIndex, i], 0]], 
-                        cornerCoordinates[MarchingCubesTables.EdgeCornerTable[MarchingCubesTables.TriangleTable[cubeIndex, i], 1]], 
+                        cornerPositions[MarchingCubesTables.EdgeCornerTable[MarchingCubesTables.TriangleTable[cubeIndex, i], 0]], 
+                        cornerPositions[MarchingCubesTables.EdgeCornerTable[MarchingCubesTables.TriangleTable[cubeIndex, i], 1]], 
                         cornerValues[MarchingCubesTables.EdgeCornerTable[MarchingCubesTables.TriangleTable[cubeIndex, i], 0]], 
                         cornerValues[MarchingCubesTables.EdgeCornerTable[MarchingCubesTables.TriangleTable[cubeIndex, i], 1]]),
                     VertexC = this.VertexInterpolate(
                         isoLevel, 
-                        cornerCoordinates[MarchingCubesTables.EdgeCornerTable[MarchingCubesTables.TriangleTable[cubeIndex, i+1], 0]], 
-                        cornerCoordinates[MarchingCubesTables.EdgeCornerTable[MarchingCubesTables.TriangleTable[cubeIndex, i+1], 1]], 
+                        cornerPositions[MarchingCubesTables.EdgeCornerTable[MarchingCubesTables.TriangleTable[cubeIndex, i+1], 0]], 
+                        cornerPositions[MarchingCubesTables.EdgeCornerTable[MarchingCubesTables.TriangleTable[cubeIndex, i+1], 1]], 
                         cornerValues[MarchingCubesTables.EdgeCornerTable[MarchingCubesTables.TriangleTable[cubeIndex, i+1], 0]], 
                         cornerValues[MarchingCubesTables.EdgeCornerTable[MarchingCubesTables.TriangleTable[cubeIndex, i+1], 1]]),
                     VertexB = this.VertexInterpolate(
                         isoLevel, 
-                        cornerCoordinates[MarchingCubesTables.EdgeCornerTable[MarchingCubesTables.TriangleTable[cubeIndex, i+2], 0]], 
-                        cornerCoordinates[MarchingCubesTables.EdgeCornerTable[MarchingCubesTables.TriangleTable[cubeIndex, i+2], 1]], 
+                        cornerPositions[MarchingCubesTables.EdgeCornerTable[MarchingCubesTables.TriangleTable[cubeIndex, i+2], 0]], 
+                        cornerPositions[MarchingCubesTables.EdgeCornerTable[MarchingCubesTables.TriangleTable[cubeIndex, i+2], 1]], 
                         cornerValues[MarchingCubesTables.EdgeCornerTable[MarchingCubesTables.TriangleTable[cubeIndex, i+2], 0]], 
                         cornerValues[MarchingCubesTables.EdgeCornerTable[MarchingCubesTables.TriangleTable[cubeIndex, i+2], 1]])
                 };
@@ -102,9 +103,9 @@ namespace WorldGeneration
             }
         }
 
-        private float3 VertexInterpolate(float isoLevel, float3 p1, float3 p2, float v1, float v2)
+        private float3 VertexInterpolate(float isoLevel, float3 pos1, float3 pos2, float v1, float v2)
         {
-            return math.lerp(p1, p2, (v1 - isoLevel) / (v1 - v2));
+            return math.lerp(pos1, pos2, (v1 - isoLevel) / (v1 - v2));
         }
     }
 }
