@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Chunks;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace WorldGeneration
@@ -15,44 +16,31 @@ namespace WorldGeneration
             this._chunkGrid = chunkGrid;
         }
 
-        public Vector3[] GetSampleCoordinates(Vector2 coords)
-        {
-            Vector3[] sampleCoordinates = new Vector3[this._chunkGrid.PointsPerChunk];
-            
-            for (int z = 0; z < this._chunkGrid.PointsPerAxis; z++)
-            {
-                for (int y = 0; y < this._chunkGrid.PointsPerAxis; y++)
-                {
-                    for (int x = 0; x < this._chunkGrid.PointsPerAxis; x++)
-                    {
-                        sampleCoordinates[this._chunkGrid.Index(x, y, z)] = new Vector3(coords.x + x, y, coords.y + z);
-                    }
-                }        
-            }
-            
-            return sampleCoordinates;
-        }
-
         public float DensityAt(Vector3 coords)
         {
             return this._noiseStack.SampleAt(coords);
         }
 
-        public ChunkMeshData GenerateMeshData(Vector2 coords)
+        public ChunkMeshData GenerateMeshData(int3 coords)
         {
-            Vector3[] sampleCoordinates = GetSampleCoordinates(coords);
-            float[] densityField = new float[sampleCoordinates.Length];
-            for (int i = 0; i < sampleCoordinates.Length; i++) {
-                densityField[i] = DensityAt(sampleCoordinates[i]);
+            float[] densityField = new float[this._chunkGrid.PointsPerChunk];
+            int i = 0;
+            foreach (var point in this._chunkGrid.Points()) {
+                densityField[i] = this.DensityAt(this._chunkGrid.ToWorld(coords, point));
+                i++;
             }
+            
+            Debug.Log($"{this._chunkGrid.PointsPerChunk} points per chunk");
 
             List<Triangle> triangles = this._marchingCubes.GetTriangles(densityField, this._chunkGrid, .3f);
+            
+            Debug.Log($"{triangles.Count} triangles");
             
             Vector3[] vertices = new Vector3[triangles.Count * 3];
             int[] triangleIndices = new int[triangles.Count * 3];
             Vector3[] normals = new Vector3[triangles.Count * 3];
             
-            for (int i = 0; i < triangles.Count; i++)
+            for (i = 0; i < triangles.Count; i++)
             {
                 Triangle triangle = triangles[i];
                 vertices[i * 3] = triangle.VertexA;
@@ -69,9 +57,6 @@ namespace WorldGeneration
             }
             
             var meshData = new ChunkMeshData(vertices, triangleIndices, normals);
-            
-            for (int t = 0; t < 5; t++)
-                Debug.Log($"{vertices[t*3]} {vertices[t*3+1]} {vertices[t*3+2]}");
 
             return meshData;
         }

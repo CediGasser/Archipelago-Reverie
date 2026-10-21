@@ -1,3 +1,4 @@
+using Unity.Mathematics;
 using UnityEngine;
 using WorldGeneration;
 
@@ -8,22 +9,27 @@ namespace Chunks
     {
         private ChunkGrid _chunkGrid;
         private MeshGenerator _meshGenerator;
-        public void Initialize(Vector3 coords, MeshGenerator generator, Material material)
+        private int3 _position;
+        
+        public void Initialize(int3 chunkCoords, MeshGenerator generator, ChunkGrid chunkGrid, Material material)
         {
             this._meshGenerator = generator;
-            this.transform.position = coords;
+            this._chunkGrid = chunkGrid;
+            this._position = chunkCoords;
+            this.transform.position = this._chunkGrid.ToWorld(chunkCoords, new int3(0, 0, 0));
 
-            Mesh mesh = this.CreateMesh(coords, generator);
+            Mesh mesh = this.CreateMesh(chunkCoords, generator);
             this.GetComponent<MeshFilter>().mesh = mesh;
             
             this.GetComponent<MeshRenderer>().material = material;
         }
 
-        private Mesh CreateMesh(Vector3 coords, MeshGenerator generator)
+        private Mesh CreateMesh(int3 chunkCoords, MeshGenerator generator)
         {
-            ChunkMeshData meshData = generator.GenerateMeshData(coords);
+            ChunkMeshData meshData = generator.GenerateMeshData(chunkCoords);
 
             Mesh newMesh = new Mesh();
+            newMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
             newMesh.SetVertices(meshData.Vertices);
             newMesh.SetTriangles(meshData.Triangles, 0);
             newMesh.SetNormals(meshData.Normals);
@@ -33,14 +39,12 @@ namespace Chunks
 
         private void OnDrawGizmos()
         {
-            var points = this._meshGenerator.GetSampleCoordinates(this.transform.position);
-
-            foreach (var point in points)
+            foreach (var point in this._chunkGrid.Points())
             {   
-                float densityNormalized = this._meshGenerator.DensityAt(point); 
+                float density = this._meshGenerator.DensityAt(this._chunkGrid.ToWorld(this._position, point)); 
                 
-                Gizmos.color = new Color(densityNormalized, densityNormalized, densityNormalized, 1.0f);
-                Gizmos.DrawSphere(point, 0.1f);
+                Gizmos.color = new Color(density, density, density, 1.0f);
+                Gizmos.DrawSphere(this._chunkGrid.ToWorld(this._position, point), 0.1f);
             }
         }
     }

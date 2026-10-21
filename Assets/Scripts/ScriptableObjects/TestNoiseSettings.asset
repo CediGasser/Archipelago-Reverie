@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3502328e214784b7db71ddeac655b86c, type: 3}
   m_Name: TestNoiseSettings
   m_EditorClassIdentifier: Assembly-CSharp::ScriptableObjects.NoiseSettings
-  cellsPerAxis: 10
-  voxelSize: 1
+  cellsPerAxis: 30
+  chunkSize: 10

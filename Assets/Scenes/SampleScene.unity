@@ -462,6 +462,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChunkManager
   noiseSettings: {fileID: 11400000, guid: 3dd8a701d584f47db87c17e5c08590ca, type: 2}
+  material: {fileID: 2100000, guid: 8c253d134034540abba6ea68e68154ea, type: 2}
 --- !u!4 &1684387258
 Transform:
   m_ObjectHideFlags: 0

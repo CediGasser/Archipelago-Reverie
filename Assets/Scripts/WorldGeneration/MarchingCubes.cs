@@ -10,48 +10,57 @@ namespace WorldGeneration
         public List<Triangle> GetTriangles(float[] densityField, ChunkGrid chunkGrid, float isoLevel)
         {
             List<Triangle> triangles = new List<Triangle>();
-        
-            for (int z = 0; z < chunkGrid.CellsPerAxis; z++)
+
+            foreach (var cell in chunkGrid.Cells())
             {
-                for (int y = 0; y < chunkGrid.CellsPerAxis; y++)
+                // The 8 corners
+                var x = cell.x;
+                var y = cell.y;
+                var z = cell.z;
+                int3[] corners =
                 {
-                    for (int x = 0; x < chunkGrid.CellsPerAxis; x++)
-                    {
-                        // Coordinates at all 8 corners
-                        int3[] cornerCoordinates =
-                        {
-                            new (x, y, z),
-                            new (x, y, z + 1),
-                            new (x + 1, y, z + 1),
-                            new (x + 1, y, z),
-                            new (x, y + 1, z),
-                            new (x, y + 1, z + 1),
-                            new (x + 1, y + 1, z + 1),
-                            new (x + 1, y + 1, z)
-                        };
+                    new (x, y, z),
+                    new (x, y, z + 1),
+                    new (x + 1, y, z + 1),
+                    new (x + 1, y, z),
+                    new (x, y + 1, z),
+                    new (x, y + 1, z + 1),
+                    new (x + 1, y + 1, z + 1),
+                    new (x + 1, y + 1, z)
+                };
                         
-                        // Density values at all 8 corners of a cube
-                        float[] cornerValues =
-                        {
-                            densityField[chunkGrid.Index(cornerCoordinates[0])],
-                            densityField[chunkGrid.Index(cornerCoordinates[1])],
-                            densityField[chunkGrid.Index(cornerCoordinates[2])],
-                            densityField[chunkGrid.Index(cornerCoordinates[3])],
-                            densityField[chunkGrid.Index(cornerCoordinates[4])],
-                            densityField[chunkGrid.Index(cornerCoordinates[5])],
-                            densityField[chunkGrid.Index(cornerCoordinates[6])],
-                            densityField[chunkGrid.Index(cornerCoordinates[7])]
-                        };
+                // Density values at all 8 corners of a cube
+                float[] cornerValues =
+                {
+                    densityField[chunkGrid.Index(corners[0])],
+                    densityField[chunkGrid.Index(corners[1])],
+                    densityField[chunkGrid.Index(corners[2])],
+                    densityField[chunkGrid.Index(corners[3])],
+                    densityField[chunkGrid.Index(corners[4])],
+                    densityField[chunkGrid.Index(corners[5])],
+                    densityField[chunkGrid.Index(corners[6])],
+                    densityField[chunkGrid.Index(corners[7])]
+                };
+                
+                // Coordinates at all 8 corners
+                float3[] cornerCoordinates =
+                {
+                    chunkGrid.ToLocal(corners[0]),
+                    chunkGrid.ToLocal(corners[1]),
+                    chunkGrid.ToLocal(corners[2]),
+                    chunkGrid.ToLocal(corners[3]),
+                    chunkGrid.ToLocal(corners[4]),
+                    chunkGrid.ToLocal(corners[5]),
+                    chunkGrid.ToLocal(corners[6]),
+                    chunkGrid.ToLocal(corners[7]),
+                };
                         
-                        this.Polygonise(cornerValues, cornerCoordinates, isoLevel, ref triangles);
-                    }
-                }
+                this.Polygonise(cornerValues, cornerCoordinates, isoLevel, ref triangles);
             }
-        
             return triangles;
         }
 
-        private void Polygonise(float[] cornerValues, int3[] cornerCoordinates, float isoLevel, ref List<Triangle> triangles)
+        private void Polygonise(float[] cornerValues, float3[] cornerCoordinates, float isoLevel, ref List<Triangle> triangles)
         {
             byte cubeIndex = 0;
             if (cornerValues[0] < isoLevel) cubeIndex |= 1;

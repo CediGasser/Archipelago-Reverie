@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ScriptableObjects;
+using Unity.Mathematics;
 using UnityEngine;
 using WorldGeneration;
 
@@ -21,18 +22,18 @@ namespace Chunks
         void OnEnable()
         {
             this._chunks.Clear();
-            this._chunks.Add(this.CreateChunk(new Vector3(0, 0, 0)));
+            this._chunks.Add(this.CreateChunk(new int3(0, 0, 0)));
+            this._chunks.Add(this.CreateChunk(new int3(0, 1, 0)));
         }
 
 
-        private Chunk CreateChunk(Vector3 position)
+        private Chunk CreateChunk(int3 position)
         {
             var go = new GameObject($"Chunk {position}");
             go.transform.parent = this.transform;
-            go.transform.localPosition = position;
 
             var chunk = go.AddComponent<Chunk>();
-            chunk.Initialize(position, this._meshGenerator, this.material);
+            chunk.Initialize(position, this._meshGenerator, this.noiseSettings.Grid, this.material);
             
             return chunk;
         }
